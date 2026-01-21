@@ -51,7 +51,7 @@ plugins/
    ```json
    {
      "name": "automatis-<name>",
-     "source": "./plugins/automatis-<name>",
+     "source": "plugins/automatis-<name>",
      "description": "What it does",
      "category": "category",
      "tags": ["tags"]
