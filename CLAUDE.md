@@ -12,13 +12,13 @@ This is a **Claude Code marketplace** for the Automatis team. Hosts multiple plu
 .claude-plugin/
 └── marketplace.json              # Plugin catalog
 
-plugins/
-├── automatis-fix-pr/
-│   ├── .claude-plugin/plugin.json
-│   └── commands/fix.md           # → /automatis-fix-pr:fix
-└── automatis-free-ports/
-    ├── .claude-plugin/plugin.json
-    └── commands/free.md          # → /automatis-free-ports:free
+automatis-fix-pr/
+├── .claude-plugin/plugin.json
+└── commands/fix.md               # → /automatis-fix-pr:fix
+
+automatis-free-ports/
+├── .claude-plugin/plugin.json
+└── commands/free.md              # → /automatis-free-ports:free
 ```
 
 ## Naming Convention
@@ -31,7 +31,7 @@ plugins/
 
 1. Create directory:
    ```
-   plugins/automatis-<name>/
+   automatis-<name>/
    ├── .claude-plugin/plugin.json
    └── commands/<action>.md
    ```
@@ -51,7 +51,7 @@ plugins/
    ```json
    {
      "name": "automatis-<name>",
-     "source": "plugins/automatis-<name>",
+     "source": "./automatis-<name>",
      "description": "What it does",
      "category": "category",
      "tags": ["tags"]
@@ -72,7 +72,7 @@ Each plugin can include:
 
 ```bash
 # Test single plugin
-claude --plugin-dir ./plugins/automatis-<name>
+claude --plugin-dir ./automatis-<name>
 
 # Validate marketplace
 claude plugin validate .
