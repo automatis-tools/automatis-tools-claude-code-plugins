@@ -1,0 +1,9 @@
+{
+  "name": "automatis-free-ports",
+  "version": "1.0.0",
+  "description": "Detect, diagnose, and manage port conflicts on macOS",
+  "author": {
+    "name": "Automatis Tools"
+  },
+  "keywords": ["port", "process", "macos", "debugging"]
+}
