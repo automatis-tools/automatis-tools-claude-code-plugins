@@ -1,0 +1,28 @@
+{
+  "name": "automatis-tools",
+  "owner": {
+    "name": "Automatis Tools",
+    "email": "team@automatis.tools"
+  },
+  "metadata": {
+    "description": "Claude Code plugins and agents for the Automatis team",
+    "version": "1.0.0",
+    "pluginRoot": "./plugins"
+  },
+  "plugins": [
+    {
+      "name": "automatis-fix-pr",
+      "source": "automatis-fix-pr",
+      "description": "Fetch PR review comments from GitHub and fix identified issues",
+      "category": "github",
+      "tags": ["pr", "review", "github", "productivity"]
+    },
+    {
+      "name": "automatis-free-ports",
+      "source": "automatis-free-ports",
+      "description": "Detect, diagnose, and free port conflicts on macOS",
+      "category": "devops",
+      "tags": ["port", "process", "macos", "debugging"]
+    }
+  ]
+}
