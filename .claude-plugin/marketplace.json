@@ -11,14 +11,14 @@
   "plugins": [
     {
       "name": "automatis-fix-pr",
-      "source": "plugins/automatis-fix-pr",
+      "source": "./plugins/automatis-fix-pr",
       "description": "Fetch PR review comments from GitHub and fix identified issues",
       "category": "github",
       "tags": ["pr", "review", "github", "productivity"]
     },
     {
       "name": "automatis-free-ports",
-      "source": "plugins/automatis-free-ports",
+      "source": "./plugins/automatis-free-ports",
       "description": "Detect, diagnose, and free port conflicts on macOS",
       "category": "devops",
       "tags": ["port", "process", "macos", "debugging"]
