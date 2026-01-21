@@ -1,0 +1,9 @@
+{
+  "name": "automatis-fix-pr",
+  "version": "1.0.0",
+  "description": "Fetch PR review comments from GitHub and fix identified issues in the codebase",
+  "author": {
+    "name": "Automatis Tools"
+  },
+  "keywords": ["pr", "review", "github", "productivity"]
+}
