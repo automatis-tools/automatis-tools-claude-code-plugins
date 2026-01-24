@@ -95,7 +95,7 @@ TOP_LEVEL=$(echo "$ALL_COMMENTS" | jq '[.[] | select(.in_reply_to_id == null)]')
 
 # 4. Find reply comment IDs from PR author
 AUTHOR_REPLIES=$(echo "$ALL_COMMENTS" | jq --arg author "$PR_AUTHOR" \
-  '[.[] | select(.user.login == $author and .in_reply_to_id != null) | .in_reply_to_id]')
+  '[.[] | select(.user.login == $author) | select(.in_reply_to_id) | .in_reply_to_id]')
 
 # 5. OPEN = top-level comments whose ID is NOT in AUTHOR_REPLIES
 OPEN_COMMENTS=$(echo "$TOP_LEVEL" | jq --argjson replied "$AUTHOR_REPLIES" \
@@ -133,7 +133,7 @@ REVIEW_ID=3684614038  # or get latest
 
 gh api "repos/{owner}/{repo}/pulls/{pr}/comments?per_page=100" | jq --arg author "$PR_AUTHOR" --argjson rid "$REVIEW_ID" '
   # Get IDs the author replied to
-  [.[] | select(.user.login == $author) | .in_reply_to_id | select(. != null)] as $replied |
+  [.[] | select(.user.login == $author) | .in_reply_to_id | select(.)] as $replied |
   # Filter: from specified review, top-level, no author reply
   [.[] |
     select(.pull_request_review_id == $rid) |
