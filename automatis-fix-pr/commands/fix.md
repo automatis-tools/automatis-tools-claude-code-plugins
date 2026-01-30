@@ -8,6 +8,15 @@ Fetch PR review comments from GitHub and fix identified issues in the codebase.
 - To address automated code review comments (AI reviewers, linters)
 - To systematically work through review issues
 
+## Shell Safety Rules (MANDATORY)
+
+When generating bash commands for this workflow:
+- **NEVER** use `!= null` in jq expressions inside bash — bash history expansion corrupts `!` even in double quotes
+- **NEVER** chain `--argjson` with shell variables — empty/invalid JSON breaks silently
+- **USE Python** (`python3 -c`) for all multi-step comment filtering logic (open/closed detection, review-ID filtering)
+- **COPY the exact code blocks** from this file — do NOT rewrite jq/Python from memory or training data
+- Simple single-field `--jq` extractions are safe (e.g., `--jq '.user.login'`)
+
 ## Arguments
 
 The user can provide:
@@ -82,24 +91,26 @@ gh api "repos/{owner}/{repo}/pulls/{pr}/reviews" \
 1. It's a top-level review comment (`in_reply_to_id` is null)
 2. There is **NO reply from the PR author** to that comment
 
-**Algorithm:**
+**Algorithm (use Python for filtering — do NOT rewrite as jq):**
 ```bash
 # 1. Get PR author
 PR_AUTHOR=$(gh api "repos/{owner}/{repo}/pulls/{pr}" --jq '.user.login')
 
-# 2. Get all comments
-ALL_COMMENTS=$(gh api "repos/{owner}/{repo}/pulls/{pr}/comments?per_page=100")
-
-# 3. Find top-level comments (in_reply_to_id is null)
-TOP_LEVEL=$(echo "$ALL_COMMENTS" | jq '[.[] | select(.in_reply_to_id == null)]')
-
-# 4. Find reply comment IDs from PR author
-AUTHOR_REPLIES=$(echo "$ALL_COMMENTS" | jq --arg author "$PR_AUTHOR" \
-  '[.[] | select(.user.login == $author) | select(.in_reply_to_id) | .in_reply_to_id]')
-
-# 5. OPEN = top-level comments whose ID is NOT in AUTHOR_REPLIES
-OPEN_COMMENTS=$(echo "$TOP_LEVEL" | jq --argjson replied "$AUTHOR_REPLIES" \
-  '[.[] | select(.id as $id | $replied | index($id) | not)]')
+# 2. Fetch all comments and filter open ones via Python
+OPEN_COMMENTS=$(gh api "repos/{owner}/{repo}/pulls/{pr}/comments?per_page=100" | python3 -c "
+import sys, json
+comments = json.load(sys.stdin)
+author = '$PR_AUTHOR'
+replied_ids = set(
+    c['in_reply_to_id'] for c in comments
+    if c['user']['login'] == author and c.get('in_reply_to_id')
+)
+open_comments = [
+    c for c in comments
+    if c.get('in_reply_to_id') is None and c['id'] not in replied_ids
+]
+print(json.dumps(open_comments, indent=2))
+")
 ```
 
 **A comment is CLOSED if the PR author has replied to it** - even if the reply says "won't fix" or "not applicable".
@@ -120,27 +131,31 @@ REVIEW_ID=$(gh api "repos/{owner}/{repo}/pulls/{pr}/reviews" --jq '
   sort_by(.submitted_at) | last | .id
 ')
 
-# Filter comments by review ID:
-gh api "repos/{owner}/{repo}/pulls/{pr}/comments?per_page=100" | jq --argjson rid "$REVIEW_ID" '
-  [.[] | select(.pull_request_review_id == $rid)]
-'
+# Filter comments by review ID + open status (use Python — do NOT rewrite as jq):
 ```
 
-**Complete filter for OPEN + CURRENT REVIEW comments:**
+**Complete filter for OPEN + CURRENT REVIEW comments (Python — do NOT rewrite as jq):**
 ```bash
 PR_AUTHOR=$(gh api "repos/{owner}/{repo}/pulls/{pr}" --jq '.user.login')
-REVIEW_ID=3684614038  # or get latest
+REVIEW_ID=3684614038  # or get latest via jq above
 
-gh api "repos/{owner}/{repo}/pulls/{pr}/comments?per_page=100" | jq --arg author "$PR_AUTHOR" --argjson rid "$REVIEW_ID" '
-  # Get IDs the author replied to
-  [.[] | select(.user.login == $author) | .in_reply_to_id | select(.)] as $replied |
-  # Filter: from specified review, top-level, no author reply
-  [.[] |
-    select(.pull_request_review_id == $rid) |
-    select(.in_reply_to_id == null) |
-    select((.id as $id | $replied | index($id)) | not)
-  ]
-'
+OPEN_REVIEW_COMMENTS=$(gh api "repos/{owner}/{repo}/pulls/{pr}/comments?per_page=100" | python3 -c "
+import sys, json
+comments = json.load(sys.stdin)
+author = '$PR_AUTHOR'
+review_id = $REVIEW_ID
+replied_ids = set(
+    c['in_reply_to_id'] for c in comments
+    if c['user']['login'] == author and c.get('in_reply_to_id')
+)
+open_comments = [
+    c for c in comments
+    if c.get('pull_request_review_id') == review_id
+    and c.get('in_reply_to_id') is None
+    and c['id'] not in replied_ids
+]
+print(json.dumps(open_comments, indent=2))
+")
 ```
 
 Severity detection patterns:
