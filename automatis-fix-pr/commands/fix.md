@@ -206,26 +206,46 @@ For each issue to fix:
    - If it's a code smell, refactor appropriately
    - If it's unclear, ask the user for clarification
 4. **Apply the fix** using Edit tool
-5. **Mark as addressed** (optionally reply to the comment)
+5. **Track what was done** — remember the comment ID and a brief description of the fix for Step 8
 
-### Step 8: Optional - Reply to Comments
+### Step 8: Reply to Comments
 
-After fixing, optionally add replies to mark issues as addressed:
+**IMPORTANT**: Reply to ALL fixed comments BEFORE pushing the branch. This ensures the reviewer sees your explanations before being notified of new commits.
+
+For each fixed comment, reply with a brief description of the actual fix applied:
 
 ```bash
 gh api "repos/{owner}/{repo}/pulls/{pr}/comments" \
   -X POST \
-  -f body="Fixed in latest commit" \
+  -f body="Fixed: <brief description of what was changed and why>" \
   -f in_reply_to={comment_id}
 ```
 
-### Step 9: Summary
+**Guidelines for reply content:**
+- Be specific about what was changed (e.g. "Fixed: replaced raw credential logging with masked output using `sanitize()` helper")
+- If you disagreed with the suggestion and took a different approach, explain why
+- If a comment was skipped, reply explaining the reason (e.g. "Not applicable because..." or "Skipped — needs clarification on...")
+
+**Before posting replies**, show the user the list of planned replies and ask for confirmation.
+
+### Step 9: Push Changes
+
+After all replies are posted:
+
+1. **Run tests/lint** to verify fixes don't break anything
+2. **Commit** the changes with a descriptive message referencing the PR
+3. **Push** the branch
+
+**CRITICAL**: Only push AFTER replies are posted. If you push first, the reviewer gets notified of new commits and may start re-reviewing before seeing your reply context.
+
+### Step 10: Summary
 
 Report:
 - Number of issues fixed
 - Files modified
+- Replies posted (count and any notable ones)
 - Any issues skipped and why
-- Suggest running tests/lint before committing
+- Branch push status
 
 ## Common Severity Patterns in AI Reviews
 
@@ -242,7 +262,9 @@ Report:
 2. Never blindly apply suggestions without understanding context
 3. Ask for clarification on ambiguous issues
 4. Run tests after fixes if possible
-5. Don't auto-commit - let user review changes first
+5. Always reply to comments BEFORE pushing the branch
+6. Show planned replies to user for confirmation before posting
+7. Don't push without explicit user approval
 
 ## Example Session
 
@@ -262,6 +284,24 @@ User: All of them
 Claude: Starting with internal/browser/pool.go:339...
 [reads file, applies fix, moves to next]
 ...
-Done! Fixed 3 issues in 2 files.
-Run `make lint && make test` to verify.
+All 3 issues fixed locally in 2 files.
+
+Here are the replies I'll post to PR comments:
+
+1. pool.go:339 → "Fixed: replaced raw proxy credential logging with masked output using sanitize() helper"
+2. pool.go:346 → "Fixed: moved proxy verification to a goroutine with context timeout"
+3. solver.go:299 → "Fixed: updated comment to accurately reflect the error propagation behavior"
+
+Post these replies?
+
+User: Yes
+
+Claude: Replies posted. Ready to push — run `make lint && make test` first?
+
+User: Tests pass, push it
+
+Claude: Pushed. Summary:
+- 3 issues fixed in 2 files
+- 3 replies posted
+- Branch pushed to origin
 ```
