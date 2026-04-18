@@ -1,6 +1,6 @@
 # Automatis Tools - Claude Code Marketplace
 
-A Claude Code plugin marketplace for the Automatis team. Contains curated plugins to enhance your development workflow.
+A Claude Code plugin marketplace for the Automatis team. Ships a single plugin, `automatis`, which bundles the team's commands under one namespace.
 
 ## Quick Start
 
@@ -8,46 +8,45 @@ A Claude Code plugin marketplace for the Automatis team. Contains curated plugin
 # Add the marketplace
 /plugin marketplace add automatis-tools/claude-code-plugins
 
-# Install plugins you need
-/plugin install automatis-fix-pr@automatis-tools
-/plugin install automatis-free-ports@automatis-tools
+# Install the plugin (one install covers every command)
+/plugin install automatis@automatis-tools
 ```
 
-## Available Plugins
+## Available Commands
 
-| Plugin | Command | Description |
-|--------|---------|-------------|
-| `automatis-fix-pr` | `/automatis-fix-pr:fix` | Fix GitHub PR review comments |
-| `automatis-free-ports` | `/automatis-free-ports:free` | Free port conflicts on macOS |
+| Command | Description |
+|---------|-------------|
+| `/automatis:fix-pr` | Fix GitHub PR review comments |
+| `/automatis:ports-release` | Release port conflicts on macOS |
 
 ---
 
-### automatis-fix-pr
+### /automatis:fix-pr
 
 Fetch PR review comments from GitHub and fix identified issues in the codebase.
 
 ```bash
-/automatis-fix-pr:fix https://github.com/owner/repo/pull/123
-/automatis-fix-pr:fix 123                    # uses current repo
-/automatis-fix-pr:fix                        # interactive mode
+/automatis:fix-pr https://github.com/owner/repo/pull/123
+/automatis:fix-pr 123                    # uses current repo
+/automatis:fix-pr                        # interactive mode
 ```
 
 **Features:**
 - Fetches all review comments with pagination
 - Filters to OPEN comments only (no author reply)
 - Groups issues by file and severity
-- Fixes issues one by one
+- Fixes issues one by one, replies on the PR before pushing
 
 ---
 
-### automatis-free-ports
+### /automatis:ports-release
 
-Detect, diagnose, and free port conflicts on macOS.
+Detect, diagnose, and release port conflicts on macOS.
 
 ```bash
-/automatis-free-ports:free 8000           # free single port
-/automatis-free-ports:free 8000 8001      # free multiple ports
-/automatis-free-ports:free                # interactive mode
+/automatis:ports-release 8000           # release single port
+/automatis:ports-release 8000 8001      # release multiple ports
+/automatis:ports-release                # interactive mode
 ```
 
 **Features:**
@@ -76,12 +75,12 @@ Add to your project's `.claude/settings.json` to auto-prompt teammates:
 
 ## Contributing
 
-1. Create `plugins/automatis-<name>/`
-2. Add `.claude-plugin/plugin.json`
-3. Add commands in `commands/`
-4. Register in `.claude-plugin/marketplace.json`
+Most contributions add a new command to the `automatis` plugin:
 
-See [CLAUDE.md](CLAUDE.md) for detailed guidelines.
+1. Create `automatis/commands/<command-name>.md` following the house style documented in [CLAUDE.md](CLAUDE.md#command-file-structure).
+2. No manifest changes needed — commands are auto-discovered.
+
+See [CLAUDE.md](CLAUDE.md) for conventions, shell-safety rules, and verification steps.
 
 ## License
 

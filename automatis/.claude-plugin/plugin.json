@@ -1,0 +1,7 @@
+{
+  "name": "automatis",
+  "version": "1.0.0",
+  "description": "Automatis team command toolbelt: fix GitHub PR review comments, release macOS port conflicts",
+  "author": { "name": "Automatis Tools" },
+  "keywords": ["pr", "review", "github", "port", "macos", "productivity", "devops"]
+}
