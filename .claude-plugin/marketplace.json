@@ -10,18 +10,11 @@
   },
   "plugins": [
     {
-      "name": "automatis-fix-pr",
-      "source": "./automatis-fix-pr",
-      "description": "Fetch PR review comments from GitHub and fix identified issues",
-      "category": "github",
-      "tags": ["pr", "review", "github", "productivity"]
-    },
-    {
-      "name": "automatis-free-ports",
-      "source": "./automatis-free-ports",
-      "description": "Detect, diagnose, and free port conflicts on macOS",
-      "category": "devops",
-      "tags": ["port", "process", "macos", "debugging"]
+      "name": "automatis",
+      "source": "./automatis",
+      "description": "Automatis team command toolbelt: fix GitHub PR review comments, release macOS port conflicts",
+      "category": "productivity",
+      "tags": ["pr", "review", "github", "port", "macos", "devops", "productivity"]
     }
   ]
 }

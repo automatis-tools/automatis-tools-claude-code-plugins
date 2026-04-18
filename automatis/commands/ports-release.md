@@ -1,6 +1,12 @@
-# Free Ports
+---
+description: Release port conflicts on macOS by killing the offending process
+argument-hint: "[port] [port...]"
+allowed-tools: Bash
+---
 
-Universal skill to detect, diagnose, and manage port conflicts on macOS. Works for any project by using the current working directory to identify project ownership.
+# Release Ports
+
+Detect, diagnose, and release port conflicts on macOS. Works for any project by using the current working directory to identify project ownership.
 
 ## When to Use
 
@@ -12,9 +18,9 @@ Universal skill to detect, diagnose, and manage port conflicts on macOS. Works f
 ## Arguments
 
 The user can provide port number(s) as arguments:
-- `/automatis-free-ports:free 8000` - Check single port
-- `/automatis-free-ports:free 8000 8001 8080` - Check multiple ports
-- `/automatis-free-ports:free` - Ask user which port(s) to check
+- `/automatis:ports-release 8000` - Check single port
+- `/automatis:ports-release 8000 8001 8080` - Check multiple ports
+- `/automatis:ports-release` - Ask user which port(s) to check
 
 ## Procedure
 
@@ -55,16 +61,21 @@ Compare the process CWD and command against the current working directory.
 
 ### Step 4: Take Action
 
-**If process is from current project:**
-- Auto-kill without confirmation:
+**Always try graceful termination first, then escalate to SIGKILL if needed.** SIGKILL prevents process cleanup (buffer flush, lock release, connection close) and can corrupt state for processes holding DB connections, open files, or network sessions.
+
 ```bash
-kill -9 PID
+# Graceful: SIGTERM. Give the process a few seconds to exit cleanly.
+kill "$PID" && sleep 3
+
+# Escalate only if the process is still alive:
+if kill -0 "$PID" 2>/dev/null; then
+  kill -9 "$PID"
+fi
 ```
 
-**If process is NOT from current project:**
-- Warn the user with process details
-- Ask if they want to kill it anyway
-- If yes, proceed with `kill -9 PID`
+**If process is from current project:** run the block above without asking.
+
+**If process is NOT from current project:** show the user the process details, ask before running the block, proceed only on confirmation.
 
 **Safety check**: Never kill processes with PID < 100 (system processes).
 
@@ -91,8 +102,9 @@ Ask user if they want to restart the service. If yes, ask for the restart comman
 | Get PID only | `lsof -i :PORT -t` |
 | Get process CWD | `lsof -p PID \| grep cwd` |
 | Get process details | `ps -p PID -o pid,args=` |
-| Kill by PID | `kill -9 PID` |
-| Kill by port (quick) | `lsof -i :PORT -t \| xargs kill -9` |
+| Graceful kill by PID | `kill PID` (SIGTERM) |
+| Force-kill by PID | `kill -9 PID` (SIGKILL — last resort) |
+| Check PID still alive | `kill -0 PID` (exit 0 = alive, 1 = gone) |
 
 ## Safety Rules
 
