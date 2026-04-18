@@ -120,13 +120,17 @@ if not branches:
     sys.exit(0)
 
 # Single bulk PR lookup — one HTTP round-trip for the whole repo,
-# vs. one per branch. --limit 500 covers all but the oldest repos.
+# vs. one per branch. Track whether we hit the ceiling so Step 6 can
+# warn the user that NO_PR categorizations may be incomplete.
+PR_LIMIT = 1000
 pr_raw = run(['gh', 'pr', 'list', '--repo', REPO_SLUG,
-              '--state', 'all', '--limit', '500',
+              '--state', 'all', '--limit', str(PR_LIMIT),
               '--json', 'number,state,url,headRefName'])
+prs = json.loads(pr_raw or '[]')
+pr_fetch_truncated = len(prs) >= PR_LIMIT
 by_head = {}
 order = {'MERGED': 0, 'OPEN': 1, 'CLOSED': 2}
-for pr in json.loads(pr_raw or '[]'):
+for pr in prs:
     by_head.setdefault(pr['headRefName'], []).append(pr)
 for head, prs in by_head.items():
     prs.sort(key=lambda p: order.get(p['state'], 9))
@@ -141,6 +145,7 @@ for b in branches:
 print(json.dumps({
     'branches': branches,
     'merged': sorted(merged_set),
+    'pr_fetch_truncated': pr_fetch_truncated,
 }, indent=2))
 PY
 )
@@ -167,6 +172,13 @@ Read the JSON in `$BRANCH_STATE` and assign each branch to exactly one bucket. *
 | 7 | `NO_PR` | `ahead > 0` AND `pr_state is None` | Offer to push + `gh pr create --fill` |
 
 ### Step 6: Present Plan and Gather Confirmations
+
+**If `pr_fetch_truncated` is true** (the bulk PR lookup hit its 1000-PR ceiling in Step 4), prepend this banner to the summary so the user knows NO_PR classifications may be stale:
+
+```
+⚠ PR list incomplete (hit 1000-PR ceiling).
+   NO_PR branches below may actually have older PRs.
+```
 
 Print a grouped summary. `MERGED_GIT` and `MERGED_PR` are collapsed under a single `MERGED` header in the display (both delete cleanly); the per-row annotation identifies which sub-bucket each branch came from.
 
@@ -199,7 +211,7 @@ WORKTREE_PINNED (1) — will NOT touch:
 
 Then prompt:
 
-- **For each `NO_PR` branch**: "Create PR for `<branch>`? [y / N / skip-all]". `skip-all` ends all NO_PR prompts.
+- **For each `NO_PR` branch**: "Create PR for `<branch>`? [y / N / skip-all]". `skip-all` ends all NO_PR prompts. When `pr_fetch_truncated` is true, append `⚠ may be stale` to each prompt so the user knows an older PR may exist for this branch.
 - **For each `CLOSED_PR` branch**: "Force-delete `<branch>` (PR #XXX was closed without merging)? [y / N]".
 - **For `GONE` bucket**: single batch prompt "Delete all GONE branches? [y / N]" (the remote already signaled intent by deleting).
 
