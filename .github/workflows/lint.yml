@@ -23,7 +23,7 @@ jobs:
           found=0
           for f in */.claude-plugin/plugin.json; do
             echo "Checking $f"
-            python3 -c "import json; json.load(open('$f'))"
+            python3 -c 'import json,sys; json.load(open(sys.argv[1]))' "$f"
             found=$((found + 1))
           done
           if [ "$found" -eq 0 ]; then
